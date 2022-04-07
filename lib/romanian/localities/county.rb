@@ -33,7 +33,7 @@ module Romanian
         assure_data_loaded!  
 
         county_data = Romanian::LOCALITY_DATA[:states].detect do |state|           
-          (name.blank? || state[:name]&.upcase == name.upcase) && (state.blank? || state[:prefix]&.upcase == prefix.upcase)
+          (name.blank? || state[:name]&.upcase == name&.upcase) && (prefix.blank? || state[:prefix]&.upcase == prefix&.upcase)
         end
         
         county_data ||= Romanian::LOCALITY_DATA[:states].detect do |state|              

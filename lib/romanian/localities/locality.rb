@@ -30,7 +30,7 @@ module Romanian
         end
           
         locality ||= eligible_localities.detect do |locality|
-          (locality.name&.upcase&.mb_chars&.normalize(:kd)&.gsub(/[^x00-\x7F]/n, '').to_s == name.upcase&.mb_chars&.normalize(:kd)&.gsub(/[^x00-\x7F]/n, '').to_s) && (parent_locality.blank? || locality.parent_locality&.upcase&.mb_chars&.normalize(:kd)&.gsub(/[^x00-\x7F]/n, '').to_s == parent_locality&.upcase&.mb_chars&.normalize(:kd)&.gsub(/[^x00-\x7F]/n, '').to_s)
+          (locality.name&.upcase&.unicode_normalize(:nfkd)&.gsub(/[^\x00-\x7F]/,'').to_s == name.upcase&.unicode_normalize(:nfkd)&.gsub(/[^\x00-\x7F]/,'').to_s) && (parent_locality.blank? || locality.parent_locality&.upcase&.unicode_normalize(:nfkd)&.gsub(/[^\x00-\x7F]/,'').to_s == parent_locality&.upcase&.unicode_normalize(:nfkd)&.gsub(/[^\x00-\x7F]/,'').to_s)
         end
 
         locality

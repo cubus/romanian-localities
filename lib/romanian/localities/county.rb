@@ -37,7 +37,7 @@ module Romanian
         end
         
         county_data ||= Romanian::LOCALITY_DATA[:states].detect do |state|              
-          (name.blank? || state[:name]&.upcase&.unicode_normalize(:nfkd)&.gsub(/[^\x00-\x7F]/,'').to_s == name.upcase.unicode_normalize(:nfkd)&.gsub(/[^\x00-\x7F]/,'').to_s) && (prefix.blank? || state[:prefix]&.upcase&.unicode_normalize(:nfkd)&.gsub(/[^\x00-\x7F]/,'').to_s == prefix.upcase.mb_chars.normalize(:kd).gsub(/[^x00-\x7F]/n, '').to_s)
+          (name.blank? || state[:name]&.upcase&.unicode_normalize(:nfkd)&.gsub(/[^\x00-\x7F]/,'').to_s == name.upcase.unicode_normalize(:nfkd)&.gsub(/[^\x00-\x7F]/,'').to_s) && (prefix.blank? || state[:prefix]&.upcase&.unicode_normalize(:nfkd)&.gsub(/[^\x00-\x7F]/,'').to_s == prefix.upcase.unicode_normalize(:nfkd)&.gsub(/[^\x00-\x7F]/,'').to_s)
         end
 
         if county_data.present?        

@@ -34,7 +34,71 @@ module Romanian
         end
 
         locality
-      end       
+      end
+
+      def self.closest_match_for(name, county: nil, max_dist: 3)
+
+        raise 'name missing' if name.blank?
+        raise 'county missing' if county.blank?
+
+        assure_data_loaded!
+
+        # Resolve county by its name/prefix or fuzzy
+        county_obj = resolve_county(county)
+        return nil unless county_obj
+
+        candidates = county_obj.localities
+
+        input_norm = normalize_locality_query(name)
+
+        # 1) try exact by raw name (case-insensitive)
+        if (exact = candidates.find { |loc| loc.name&.upcase == name.to_s.upcase })
+          return exact
+        end
+
+        # 2) try exact by diacritics-stripped name or provided normalized_name
+        if (exact2 = candidates.find do |loc|
+              ln  = normalize_locality_query(loc.name)
+              lnn = normalize_locality_query(loc.normalized_name)
+              ln == input_norm || lnn == input_norm
+            end)
+          return exact2
+        end
+
+        # 3) fuzzy within county — Levenshtein over normalized strings
+        pairs = candidates.map do |loc|
+          ln  = normalize_locality_query(loc.name)
+          lnn = normalize_locality_query(loc.normalized_name)
+          d1 = Romanian::Localities::County.send(:levenshtein, input_norm, ln)
+          d2 = Romanian::Localities::County.send(:levenshtein, input_norm, lnn)
+          d  = [d1, d2].compact.min
+          d ? [d, loc] : nil
+        end.compact
+
+        best_dist, best_loc = pairs.min_by { |pair| pair.first } || [nil, nil]
+
+        return nil if best_loc.nil?
+
+        # dynamic guardrail: do not accept very distant matches for short inputs
+        dyn = [max_dist.to_i, (input_norm.length / 4.0).ceil].max
+        best_dist <= dyn ? best_loc : nil
+      end
+
+      class << self
+        private
+
+        # Normalization similar to County.normalize_county_query, but tailored for localities
+        def normalize_locality_query(str)
+          s = str.to_s.strip.upcase
+          s = s.unicode_normalize(:nfkd).gsub(/[^\x00-\x7F]/, '')
+          s = s.gsub(/[^A-Z0-9]+/, ' ').strip
+          s.gsub(/\s+/, ' ')
+        end
+
+        def resolve_county(county)
+          County.get(name: county) || County.get(prefix: county) || County.closest_match_for(county)
+        end
+      end
     end
   end
 end

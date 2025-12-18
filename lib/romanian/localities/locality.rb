@@ -65,7 +65,27 @@ module Romanian
           return exact2
         end
 
-        # 3) fuzzy within county — Levenshtein over normalized strings
+        # 3) prioritize locality names that start with the search term (normalized)
+        prefix_matches = candidates.select do |loc|
+          ln  = normalize_locality_query(loc.name)
+          lnn = normalize_locality_query(loc.normalized_name)
+          ln.start_with?(input_norm) || lnn.start_with?(input_norm)
+        end
+
+        unless prefix_matches.empty?
+          # pick the one with the shortest remainder after the prefix match
+          best_prefix = prefix_matches.min_by do |loc|
+            ln  = normalize_locality_query(loc.name)
+            lnn = normalize_locality_query(loc.normalized_name)
+            remainders = []
+            remainders << (ln.length - input_norm.length) if ln.start_with?(input_norm)
+            remainders << (lnn.length - input_norm.length) if lnn.start_with?(input_norm)
+            remainders.min || 0
+          end
+          return best_prefix
+        end
+
+        # 4) fuzzy within county — Levenshtein over normalized strings
         pairs = candidates.map do |loc|
           ln  = normalize_locality_query(loc.name)
           lnn = normalize_locality_query(loc.normalized_name)
